@@ -138,7 +138,7 @@ void setup() {
     Serial.println("WiFi connected.");
     Serial.print("IP is ");
     Serial.println(WiFi.localIP());
-
+    //write what you want to do using WiFi
   }else{
     //Setup SoftAP mode
     softap = true;
