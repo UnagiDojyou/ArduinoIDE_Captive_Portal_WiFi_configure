@@ -5,12 +5,8 @@
 #include <DNSServer.h>
 #include "Captive_Portal_WiFi_connector.h"
 
-WebServer server(80);
-WiFiClient client;
-DNSServer dnsServer;
-
 CPWiFiConfigure::CPWiFiConfigure(int _switchpin, int _ledpin, HardwareSerial& port)
-  : CPSerial(port) {
+  : CPSerial(port), server(80), client(), dnsServer() {
   softap = true;
   presstime = 500;
   blinktime = 300;
@@ -55,13 +51,13 @@ bool CPWiFiConfigure::begin() {
 
     createhtml();
     server.on("/", HTTP_GET, [this]() {
-      server.send(200, "text/html", this->roothtml);
+      this->server.send(200, "text/html", this->roothtml);
     });
     server.on("/submit", HTTP_POST, [this]() {
       if (server.hasArg("SSID") && server.hasArg("Password")) {
-        String staSSID = server.arg("SSID");
-        String staPassword = server.arg("Password");
-        server.send(200, "text/html", this->submithtml);
+        String staSSID = this->server.arg("SSID");
+        String staPassword = this->server.arg("Password");
+        this->server.send(200, "text/html", this->submithtml);
         LittleFS.begin();
         File file = LittleFS.open(wifi_config, "w");
         file.println(staSSID);      //SSID
@@ -70,15 +66,15 @@ bool CPWiFiConfigure::begin() {
         LittleFS.end();
         this->softap = false;
       } else {
-        server.send(200, "text/html", this->roothtml);
+        this->server.send(200, "text/html", this->roothtml);
       }
     });
-    server.onNotFound([IP]() {
+    server.onNotFound([IP, this]() {
       char rooturl[22];
       sprintf(rooturl, "http://%d.%d.%d.%d", IP[0], IP[1], IP[2], IP[3]);
-      server.sendHeader("Location", rooturl, true);
-      server.send(302, "text/plain", "");
-      server.client().stop();
+      this->server.sendHeader("Location", rooturl, true);
+      this->server.send(302, "text/plain", "");
+      this->server.client().stop();
     });
 
     dnsServer.start(53, "*", IP);

@@ -2,6 +2,8 @@
 #define CPWiFiConfigure_h
 
 #include "Arduino.h"
+#include <WebServer.h>
+#include <DNSServer.h>
 
 class CPWiFiConfigure {
   public:
@@ -21,6 +23,9 @@ class CPWiFiConfigure {
     char htmltitle[100];
     char boardname[100];
   private:
+    WebServer server;
+    WiFiClient client;
+    DNSServer dnsServer;
     HardwareSerial& CPSerial;
     int switchpin;
     int ledpin;
