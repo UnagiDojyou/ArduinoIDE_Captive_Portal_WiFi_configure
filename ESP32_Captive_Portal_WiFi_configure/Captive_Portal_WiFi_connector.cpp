@@ -15,7 +15,7 @@ CPWiFiConfigure::CPWiFiConfigure(int _switchpin, int _ledpin, HardwareSerial& po
   blinktime = 300;
   switchpin = _switchpin;
   ledpin = _ledpin;
-  //baseMacChr[17] = { 0 };
+  baseMacChr[17] = { 0 };
 }
 
 bool CPWiFiConfigure::begin() {
@@ -49,9 +49,9 @@ bool CPWiFiConfigure::begin() {
     CPSerial.print("AP IP address: ");
     CPSerial.println(IP);
 
-    server.on("/", HTTP_GET, handleRoot());
-    server.on("/submit", HTTP_POST, handleSubmit());
-    server.onNotFound(handleNotFound());
+    server.on("/", HTTP_GET, handleRoot);
+    server.on("/submit", HTTP_POST, handleSubmit);
+    server.onNotFound(handleNotFound);
 
     dnsServer.start(53, "*", IP);
     server.begin();
@@ -92,8 +92,8 @@ void CPWiFiConfigure::handleSubmit() {
   if (server.hasArg("SSID") && server.hasArg("Password")) {
     String staSSID = server.arg("SSID");
     String staPassword = server.arg("Password");
-    CPSerial.println(staSSID);
-    CPSerial.println(staPassword);
+    //CPSerial.println(staSSID);
+    //CPSerial.println(staPassword);
 
     char htmlForm[500];
     snprintf(htmlForm, 500, "<!DOCTYPE html>\

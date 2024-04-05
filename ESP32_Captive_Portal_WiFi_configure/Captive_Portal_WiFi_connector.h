@@ -18,14 +18,22 @@ class CPWiFiConfigure {
     IPAddress IP;
     int presstime;
     int blinktime;
+    char *baseMacChr;
   private:
     HardwareSerial& CPSerial;
     int switchpin;
     int ledpin;
-    char baseMacChr[17];
+    static void handleNotFound();
+    static void handleSubmit();
+    static void handleRoot();
+    /*char baseMacChr[17];
     void handleNotFound();
     void handleSubmit();
-    void handleRoot();
+    void handleRoot();*/
 };
+
+void handleNotFound();
+void handleSubmit();
+void handleRoot();
 
 #endif
