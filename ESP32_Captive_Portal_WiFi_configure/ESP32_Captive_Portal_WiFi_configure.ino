@@ -123,7 +123,12 @@ void setup() {
     Serial.println(staSSID);
     Serial.println(staPassword);
     WiFi.begin(staSSID, staPassword);
+    count = 0;
     while (WiFi.status() != WL_CONNECTED) {
+      if(count > 20){
+        Serial.println("WiFi connect Fail. reboot.");
+        ESP.restart();
+      }
       delay(1000); //1sencods
       readbutton();
       Serial.print(".");
@@ -135,6 +140,7 @@ void setup() {
         digitalWrite(LED_BUILTIN, LOW);
         led = false;
       }
+      count++;
     }
     digitalWrite(LED_BUILTIN, LOW);
     Serial.println("");
@@ -175,12 +181,17 @@ void setup() {
 void readbutton(){
   if(!digitalRead(BOOT_SW)){
     count = 0;
+    digitalWrite(LED_BUILTIN, LOW);
     while(!digitalRead(BOOT_SW)){
       delay(10);
       count++;
       if(count > 500){ //5seconds
+        digitalWrite(LED_BUILTIN, HIGH);
         Serial.println("Erase wifi_config and reboot");
         SPIFFS.remove(wifi_config);
+        while(!digitalRead(BOOT_SW)){
+          delay(10);
+        }
         ESP.restart();
         break;
       }

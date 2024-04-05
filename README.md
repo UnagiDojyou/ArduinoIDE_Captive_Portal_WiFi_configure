@@ -20,9 +20,8 @@ If it cannot be found, there is a high possibility that the FS settings are not 
 9. Check LED status. If the slow blinking continues, please do "Reset WiFi Setting" and review your WiFi settings.
 
 ### Reset WiFi Setting
-0. Please try reboot (unplugging the power) first.<br>
 1. Press and hold the BOOTSEL(Raspberry Pi Pico) or BOOT(ESP32) button for more than 5 seconds.<br>
-2. Only Raspberry Pi Pico W : After that, please reboot the Raspberry Pi Pico W (reconnect the power supply).
+2. Release the button when the LED lights up.
 
 ## LED status
 ### Blink quickly

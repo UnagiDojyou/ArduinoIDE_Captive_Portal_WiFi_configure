@@ -120,7 +120,12 @@ void setup() {
     Serial.println(staSSID);
     Serial.println(staPassword);
     WiFi.begin(staSSID.c_str(), staPassword.c_str());
+    count = 0;
     while (WiFi.status() != WL_CONNECTED) {
+      if(count > 20){
+        Serial.println("WiFi connect Fail. reboot.");
+        rp2040.reboot();
+      }
       delay(1000); //1sencods
       readbutton();
       Serial.print(".");
@@ -132,6 +137,7 @@ void setup() {
         digitalWrite(LED_BUILTIN, LOW);
         led = false;
       }
+      count++;
     }
     digitalWrite(LED_BUILTIN, LOW);
     Serial.println("");
@@ -172,12 +178,17 @@ void setup() {
 void readbutton(){
   if(BOOTSEL){
     count = 0;
+    digitalWrite(LED_BUILTIN, LOW);
     while(BOOTSEL){
       delay(10);
       count++;
       if(count > 500){ //5seconds
+        digitalWrite(LED_BUILTIN, HIGH);
         Serial.println("Erase wifi_config and reboot");
         LittleFS.remove(wifi_config);
+        while(!digitalRead(BOOTSEL)){
+          delay(10);
+        }
         rp2040.reboot();
         break;
       }
