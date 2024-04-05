@@ -16,24 +16,18 @@ class CPWiFiConfigure {
     bool readButton();
     const char* wifi_config = "/WiFi.txt";
     IPAddress IP;
-    int presstime;
-    int blinktime;
-    char *baseMacChr;
+    int presstime; //10ms
+    int blinktime; //ms
+    char htmltitle[100];
+    char boardname[100];
   private:
     HardwareSerial& CPSerial;
     int switchpin;
     int ledpin;
-    static void handleNotFound();
-    static void handleSubmit();
-    static void handleRoot();
-    /*char baseMacChr[17];
-    void handleNotFound();
-    void handleSubmit();
-    void handleRoot();*/
+    char baseMacChr[18];
+    char roothtml[1000];
+    char submithtml[1000];
+    void createhtml();
 };
-
-void handleNotFound();
-void handleSubmit();
-void handleRoot();
 
 #endif

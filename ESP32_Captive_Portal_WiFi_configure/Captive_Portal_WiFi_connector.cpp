@@ -9,19 +9,23 @@ WebServer server(80);
 WiFiClient client;
 DNSServer dnsServer;
 
-CPWiFiConfigure::CPWiFiConfigure(int _switchpin, int _ledpin, HardwareSerial& port) : CPSerial(port) {
+CPWiFiConfigure::CPWiFiConfigure(int _switchpin, int _ledpin, HardwareSerial& port)
+  : CPSerial(port) {
   softap = true;
   presstime = 500;
   blinktime = 300;
   switchpin = _switchpin;
   ledpin = _ledpin;
   baseMacChr[17] = { 0 };
+  sprintf(htmltitle, "Captive Portal WiFi Connector");
+  sprintf(boardname, "board");
 }
 
 bool CPWiFiConfigure::begin() {
-  pinMode(switchpin, OUTPUT);
-  digitalWrite(switchpin, LOW);
-  if (!LittleFS.begin()) {
+  pinMode(ledpin, OUTPUT);
+  digitalWrite(ledpin, LOW);
+  pinMode(switchpin,INPUT_PULLUP);
+  if (!LittleFS.begin(true)) {
     CPSerial.println("SPIFFS failed, or not present");
     return false;
   } else if (LittleFS.exists(wifi_config)) {
@@ -37,7 +41,7 @@ bool CPWiFiConfigure::begin() {
     WiFi.macAddress(baseMac);
     sprintf(baseMacChr, "%02X:%02X:%02X:%02X:%02X:%02X", baseMac[0], baseMac[1], baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
     char softSSID[10] = { 0 };
-    sprintf(softSSID, "CPWiFiConfigure-%02X%02X%02X", baseMac[3], baseMac[4], baseMac[5]);
+    sprintf(softSSID, "%s-%02X%02X%02X", boardname, baseMac[3], baseMac[4], baseMac[5]);
 
     CPSerial.print("MAC: ");
     CPSerial.println(baseMacChr);
@@ -49,9 +53,33 @@ bool CPWiFiConfigure::begin() {
     CPSerial.print("AP IP address: ");
     CPSerial.println(IP);
 
-    server.on("/", HTTP_GET, handleRoot);
-    server.on("/submit", HTTP_POST, handleSubmit);
-    server.onNotFound(handleNotFound);
+    createhtml();
+    server.on("/", HTTP_GET, [this]() {
+      server.send(200, "text/html", this->roothtml);
+    });
+    server.on("/submit", HTTP_POST, [this]() {
+      if (server.hasArg("SSID") && server.hasArg("Password")) {
+        String staSSID = server.arg("SSID");
+        String staPassword = server.arg("Password");
+        server.send(200, "text/html", this->submithtml);
+        LittleFS.begin();
+        File file = LittleFS.open(wifi_config, "w");
+        file.println(staSSID);      //SSID
+        file.println(staPassword);  //password
+        file.close();
+        LittleFS.end();
+        this->softap = false;
+      } else {
+        server.send(200, "text/html", this->roothtml);
+      }
+    });
+    server.onNotFound([IP]() {
+      char rooturl[22];
+      sprintf(rooturl, "http://%d.%d.%d.%d", IP[0], IP[1], IP[2], IP[3]);
+      server.sendHeader("Location", rooturl, true);
+      server.send(302, "text/plain", "");
+      server.client().stop();
+    });
 
     dnsServer.start(53, "*", IP);
     server.begin();
@@ -60,7 +88,6 @@ bool CPWiFiConfigure::begin() {
       server.handleClient();
       dnsServer.processNextRequest();
       count++;
-      delay(1);
       if (count > blinktime) {
         if (!led) {
           led = true;
@@ -71,80 +98,39 @@ bool CPWiFiConfigure::begin() {
         }
         count = 0;
       }
-      delay(1);
+      //delay(1);
     }
     LittleFS.end();
     dnsServer.stop();
     server.stop();
+    WiFi.softAPdisconnect(true);
+
     return true;
   }
 }
 
-void CPWiFiConfigure::handleNotFound() {
-  char rooturl[22];
-  IPAddress ip = WiFi.localIP();
-  sprintf(rooturl, "http//%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
-  server.send(302, "text/plain", "");
-  server.client().stop();
-}
-
-void CPWiFiConfigure::handleSubmit() {
-  if (server.hasArg("SSID") && server.hasArg("Password")) {
-    String staSSID = server.arg("SSID");
-    String staPassword = server.arg("Password");
-    //CPSerial.println(staSSID);
-    //CPSerial.println(staPassword);
-
-    char htmlForm[500];
-    snprintf(htmlForm, 500, "<!DOCTYPE html>\
-<html>\
-<head>\
-<title>Raspberry Pi Pico W WiFi Setting</title>\
-<meta name=\"viewport\" content=\"width=300\">\
-</head>\
-<body>\
-<h2>Raspberry Pi Pico W WiFi Setting</h2>\
-<p>MACaddress<br>%s</p>\
-<p>Attempts to connect to %s after 10 seconds.</p>\
-<p>When led blinks at 1 second intervals, Raspberry Pi Pico W is trying to connect to WiFi.<br>\
-If it continues for a long time, press and hold the reset button for more than 5 seconds and setting WiFi again.</p>\
-</body>\
-</html>",
-             baseMacChr, staSSID.c_str());
-    server.send(200, "text/html", htmlForm);
-
-    File file = LittleFS.open(wifi_config, "w");
-    file.println(staSSID);      //SSID
-    file.println(staPassword);  //password
-    file.close();
-    softap = false;
-  } else {
-    server.send(200, "text/plain", "Message not received");
-  }
-}
-
-void CPWiFiConfigure::handleRoot() {
-  char htmlForm[500];
-  snprintf(htmlForm, 500, "<!DOCTYPE html>\
-<html>\
-<head>\
-<title>Raspberry Pi Pico W WiFi Setting</title>\
-<meta name=\"viewport\" content=\"width=300\">\
-</head>\
-<body>\
-<h2>Raspberry Pi Pico W WiFi Setting</h2>\
+void CPWiFiConfigure::createhtml() {
+  snprintf(roothtml, 1000, "<!DOCTYPE html><html><head><title>%s</title>\
+<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head><body>\
+<h2>%s</h2>\
 <p>MACaddress<br>%s</p>\
 <form action=\"/submit\" method=\"POST\">\
 SSID<br>\
-<input type=\"text\" name=\"SSID\" required\">\<br>\
+<input type=\"text\" name=\"SSID\" required><br>\
 Password<br>\
-<input type=\"text\" name=\"Password\" required\">\<br>\
+<input type=\"text\" name=\"Password\" required><br>\
 <input type=\"submit\" value=\"send\">\
-</form>\
-</body>\
-</html>",
-           baseMacChr);
-  server.send(200, "text/html", htmlForm);
+</form></body></html>",
+           htmltitle, htmltitle, baseMacChr);
+  snprintf(submithtml, 1000, "<!DOCTYPE html><html><head><title>%s</title>\
+<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head><body>\
+<h2>%s</h2>\
+<p>MACaddress<br>%s</p>\
+<p>Attempts to connect to WiFi after 10 seconds.</p>\
+<p>When led blinks at 1 second intervals, %s is trying to connect to WiFi.<br>\
+If it continues for a long time, press and hold the reset button for more than %d seconds and setting WiFi again.</p>\
+</body></html>",
+           htmltitle, htmltitle, baseMacChr, boardname, presstime / 100);
 }
 
 String CPWiFiConfigure::readSSID() {
@@ -175,13 +161,17 @@ bool CPWiFiConfigure::readButton() {
   if (!digitalRead(switchpin)) {
     int count = 0;
     digitalWrite(ledpin, LOW);
-    while (digitalRead(switchpin)) {
+    led = false;
+    while (!digitalRead(switchpin)) {
       delay(10);
       count++;
-      if (count > presstime) {  //5seconds
+      if (count > presstime) {
+        led = true;
         digitalWrite(ledpin, HIGH);
         CPSerial.println("Erase wifi_config");
+        LittleFS.begin();
         LittleFS.remove(wifi_config);
+        LittleFS.end();
         while (!digitalRead(switchpin)) {
           delay(10);
         }
