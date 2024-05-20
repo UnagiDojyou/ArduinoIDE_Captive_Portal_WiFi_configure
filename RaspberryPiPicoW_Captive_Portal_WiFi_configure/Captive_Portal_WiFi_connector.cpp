@@ -5,6 +5,8 @@
 #include <DNSServer.h>
 #include "Captive_Portal_WiFi_connector.h"
 
+
+
 CPWiFiConfigure::CPWiFiConfigure(int _switchpin, int _ledpin, HardwareSerial& port)
   : CPSerial(port), server(80), client(), dnsServer() {
   softap = true;
