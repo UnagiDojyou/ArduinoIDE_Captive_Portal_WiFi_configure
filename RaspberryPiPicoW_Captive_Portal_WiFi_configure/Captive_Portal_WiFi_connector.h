@@ -7,6 +7,8 @@
 
 class CPWiFiConfigure {
   public:
+    //no HardwareSerial
+    CPWiFiConfigure(int _switchpin, int _ledpin);
     //HardwareSerial CPSerial;
     CPWiFiConfigure(int _switchpin, int _ledpin, HardwareSerial& port);
     
@@ -20,8 +22,8 @@ class CPWiFiConfigure {
     IPAddress IP;
     int presstime; //10ms
     int blinktime; //ms
-    char htmltitle[100];
-    char boardname[100];
+    char htmltitle[100]; //enter CaptivePortal html title
+    char boardname[100]; //enter Boardname to display on CaptivePortal webpage
   private:
     WebServer server;
     WiFiClient client;
@@ -29,10 +31,13 @@ class CPWiFiConfigure {
     HardwareSerial& CPSerial;
     int switchpin;
     int ledpin;
+    bool hwserial;
     char baseMacChr[18];
     char roothtml[1000];
     char submithtml[1000];
     void createhtml();
+    void printhwserialln(String _str);
+    void printhwserial(String _str);
 };
 
 #endif

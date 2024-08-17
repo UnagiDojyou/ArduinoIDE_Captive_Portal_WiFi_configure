@@ -10,7 +10,8 @@ CPWiFiConfigure CPWiFi(Button, LED_BUILTIN, Serial);
 
 void setup() {
   Serial.begin(115200);
-  sprintf(CPWiFi.boardname,"ESP32");
+  delay(1000);
+  sprintf(CPWiFi.boardname,"Raspberry Pi Pico W");
   if(!CPWiFi.begin()){
     Serial.println("Fail to start Capitive_Portal_WiFi_configure");
     return;

@@ -5,10 +5,9 @@
 #include <DNSServer.h>
 #include "Captive_Portal_WiFi_connector.h"
 
-
-
-CPWiFiConfigure::CPWiFiConfigure(int _switchpin, int _ledpin, HardwareSerial& port)
-  : CPSerial(port), server(80), client(), dnsServer() {
+CPWiFiConfigure::CPWiFiConfigure(int _switchpin, int _ledpin)
+  : CPSerial(Serial), server(80), client(), dnsServer() {
+  hwserial = false;
   softap = true;
   presstime = 500;
   blinktime = 300;
@@ -19,21 +18,47 @@ CPWiFiConfigure::CPWiFiConfigure(int _switchpin, int _ledpin, HardwareSerial& po
   sprintf(boardname, "board");
 }
 
+CPWiFiConfigure::CPWiFiConfigure(int _switchpin, int _ledpin, HardwareSerial& port)
+  : CPSerial(port), server(80), client(), dnsServer() {
+  hwserial = true;
+  softap = true;
+  presstime = 500;
+  blinktime = 300;
+  switchpin = _switchpin;
+  ledpin = _ledpin;
+  baseMacChr[17] = { 0 };
+  sprintf(htmltitle, "Captive Portal WiFi Connector");
+  sprintf(boardname, "board");
+}
+
+void CPWiFiConfigure::printhwserialln(String str){
+  if(hwserial){
+    CPSerial.println(str);
+  }
+}
+
+void CPWiFiConfigure::printhwserial(String str){
+  if(hwserial){
+    CPSerial.print(str);
+  }
+}
+
 bool CPWiFiConfigure::begin() {
   pinMode(ledpin, OUTPUT);
   digitalWrite(ledpin, LOW);
   pinMode(switchpin, INPUT_PULLUP);
   if (!LittleFS.begin()) {
-    CPSerial.println("SPIFFS failed, or not present");
+    printhwserialln("[CPWiFiConfigure] SPIFFS failed, or not present");
     return false;
   } else if (LittleFS.exists(wifi_config)) {
     softap = false;
-    CPSerial.println("Config exist");
+    printhwserialln("[CPWiFiConfigure] Config exist");
     LittleFS.end();
     return true;
   } else {
     softap = true;
-    CPSerial.println("start AP");
+    printhwserialln("[CPWiFiConfigure] start AP");
+    printhwserialln("test0");
     // Get MAC address for WiFi station
     uint8_t baseMac[6];
     WiFi.macAddress(baseMac);
@@ -41,15 +66,15 @@ bool CPWiFiConfigure::begin() {
     char softSSID[10] = { 0 };
     sprintf(softSSID, "%s-%02X%02X%02X", boardname, baseMac[3], baseMac[4], baseMac[5]);
 
-    CPSerial.print("MAC: ");
-    CPSerial.println(baseMacChr);
-    CPSerial.print("SSID: ");
-    CPSerial.println(softSSID);
+    printhwserial("[CPWiFiConfigure] MAC: ");
+    printhwserialln(baseMacChr);
+    printhwserial("[CPWiFiConfigure] SSID: ");
+    printhwserialln(softSSID);
 
     WiFi.softAP(softSSID);
     IPAddress IP = WiFi.softAPIP();
-    CPSerial.print("AP IP address: ");
-    CPSerial.println(IP);
+    printhwserial("[CPWiFiConfigure] AP IP address: ");
+    printhwserialln(WiFi.softAPIP().toString());
 
     createhtml();
     server.on("/", HTTP_GET, [this]() {
@@ -96,7 +121,7 @@ bool CPWiFiConfigure::begin() {
         }
         count = 0;
       }
-      //delay(1);
+      delay(1);
     }
     LittleFS.end();
     dnsServer.stop();
@@ -166,7 +191,7 @@ bool CPWiFiConfigure::readButton() {
       if (count > presstime) {
         led = true;
         digitalWrite(ledpin, HIGH);
-        CPSerial.println("Erase wifi_config");
+        printhwserialln("[CPWiFiConfigure] Erase wifi_config");
         LittleFS.begin();
         LittleFS.remove(wifi_config);
         LittleFS.end();

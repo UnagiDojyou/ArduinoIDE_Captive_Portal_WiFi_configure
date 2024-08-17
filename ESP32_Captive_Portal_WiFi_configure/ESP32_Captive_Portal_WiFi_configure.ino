@@ -9,10 +9,6 @@ CPWiFiConfigure CPWiFi(BOOT_SW, LED_BUILTIN, Serial);
 void setup() {
   Serial.begin(115200);
   sprintf(CPWiFi.boardname, "ESP32");
-  if(!LittleFS.begin(true)){
-    Serial.println("SPIFFS failed, or not present");
-  }
-  LittleFS.end();
   if (!CPWiFi.begin()) {
     Serial.println("Fail to start Capitive_Portal_WiFi_configure");
     return;
