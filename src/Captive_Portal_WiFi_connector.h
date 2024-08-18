@@ -8,7 +8,11 @@
 #define CPWiFiConfigure_h
 
 #include "Arduino.h"
-#include <WebServer.h>
+#if defined  ESP8266
+  #include <ESP8266WebServer.h>
+#else
+  #include <WebServer.h>
+#endif
 #include <DNSServer.h>
 
 class CPWiFiConfigure {
@@ -31,7 +35,11 @@ class CPWiFiConfigure {
     char htmlTitle[100]; //enter CaptivePortal html title
     char boardName[100]; //enter Boardname to display on CaptivePortal webpage
   private:
-    WebServer server;
+#if defined  ESP8266
+  ESP8266WebServer server;
+#else
+  WebServer server;
+#endif    
     WiFiClient client;
     DNSServer dnsServer;
     HardwareSerial& CPSerial;
