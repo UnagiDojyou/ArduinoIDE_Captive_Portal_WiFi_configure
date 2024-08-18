@@ -1,18 +1,15 @@
-// Before running:
-// Select Tools->Flash Size->(some size with a FS/filesystem)
-
 #include <WiFi.h>
-#include "Captive_Portal_WiFi_connector.h"
+#include <esp_system.h>
+#include <Captive_Portal_WiFi_connector.h>
 
-#define Button 1
+#define BOOT_SW 0
 
-CPWiFiConfigure CPWiFi(Button, LED_BUILTIN, Serial);
+CPWiFiConfigure CPWiFi(BOOT_SW, LED_BUILTIN, Serial);
 
 void setup() {
   Serial.begin(115200);
-  delay(1000);
-  sprintf(CPWiFi.boardName,"Raspberry Pi Pico W");
-  if(!CPWiFi.begin()){
+  sprintf(CPWiFi.boardName, "ESP32");
+  if (!CPWiFi.begin()) {
     Serial.println("Fail to start Capitive_Portal_WiFi_configure");
     return;
   }
@@ -22,11 +19,11 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     if (count > 20) {
       Serial.println("WiFi connect Fail. reboot.");
-      rp2040.reboot();
+      ESP.restart();
     }
     delay(1000);  //1sencods
     if (CPWiFi.readButton()) {
-      rp2040.reboot();
+      ESP.restart();
     }
     Serial.print(".");
     if (!led) {
@@ -48,6 +45,7 @@ void setup() {
 
 void loop() {
   if (CPWiFi.readButton()) {
-    rp2040.reboot();
+    ESP.restart();
   }
+  // write what you want to do using WiFi
 }

@@ -1,3 +1,9 @@
+/*
+  Captive_Portal_connector.h
+  Created by UnagiDojyou
+  https://github.com/UnagiDojyou/ArduinoIDE_Captive_Portal_WiFi_configure
+*/
+
 #ifndef CPWiFiConfigure_h
 #define CPWiFiConfigure_h
 
