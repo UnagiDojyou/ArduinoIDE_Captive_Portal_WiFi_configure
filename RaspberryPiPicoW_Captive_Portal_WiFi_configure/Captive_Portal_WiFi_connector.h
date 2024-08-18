@@ -8,36 +8,36 @@
 class CPWiFiConfigure {
   public:
     //no HardwareSerial
-    CPWiFiConfigure(int _switchpin, int _ledpin);
+    CPWiFiConfigure(int _switchPin, int _ledPin);
     //HardwareSerial CPSerial;
-    CPWiFiConfigure(int _switchpin, int _ledpin, HardwareSerial& port);
+    CPWiFiConfigure(int _switchPin, int _ledPin, HardwareSerial& port);
     
-    bool softap;
-    bool led;
+    bool softAP;
+    bool ledStatus;
     bool begin();
     String readSSID();
     String readPASS();
     bool readButton();
     const char* wifi_config = "/WiFi.txt";
     IPAddress IP;
-    int presstime; //10ms
-    int blinktime; //ms
-    char htmltitle[100]; //enter CaptivePortal html title
-    char boardname[100]; //enter Boardname to display on CaptivePortal webpage
+    int pressTime; //10ms
+    int blinkTime; //ms
+    char htmlTitle[100]; //enter CaptivePortal html title
+    char boardName[100]; //enter Boardname to display on CaptivePortal webpage
   private:
     WebServer server;
     WiFiClient client;
     DNSServer dnsServer;
     HardwareSerial& CPSerial;
-    int switchpin;
-    int ledpin;
-    bool hwserial;
-    char baseMacChr[18];
-    char roothtml[1000];
-    char submithtml[1000];
-    void createhtml();
-    void printhwserialln(String _str);
-    void printhwserial(String _str);
+    int switchPin;
+    int ledPin;
+    bool hwSerial;
+    char baseMacChar[18];
+    char rootHTLM[1000];
+    char submitHTML[1000];
+    void createHTML();
+    void hwSerialprintln(String str);
+    void hwSerialprint(String str);
 };
 
 #endif
