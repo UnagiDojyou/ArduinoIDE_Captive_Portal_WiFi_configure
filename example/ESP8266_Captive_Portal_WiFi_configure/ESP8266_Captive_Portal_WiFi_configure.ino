@@ -35,6 +35,7 @@ void setup() {
     count++;
   }
   digitalWrite(LED_BUILTIN, HIGH); //GPIO2 of ESP12 or ESP8266mod is pulluped
+  led = false;
   Serial.println("");
   Serial.println("WiFi connected.");
   Serial.print("IP is ");

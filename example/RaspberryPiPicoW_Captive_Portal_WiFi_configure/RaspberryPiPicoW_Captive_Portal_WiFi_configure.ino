@@ -39,6 +39,7 @@ void setup() {
     count++;
   }
   digitalWrite(LED_BUILTIN, LOW);
+  led = false;
   Serial.println("");
   Serial.println("WiFi connected.");
   Serial.print("IP is ");
