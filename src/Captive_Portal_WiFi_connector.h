@@ -17,10 +17,10 @@
 
 class CPWiFiConfigure {
   public:
-    //no HardwareSerial
+    //no Serial
     CPWiFiConfigure(int _switchPin, int _ledPin);
-    //HardwareSerial CPSerial;
-    CPWiFiConfigure(int _switchPin, int _ledPin, HardwareSerial& port);
+    //port=Serial
+    CPWiFiConfigure(int _switchPin, int _ledPin, Stream& port);
     
     bool softAP;
     bool ledStatus;
@@ -36,22 +36,22 @@ class CPWiFiConfigure {
     char boardName[100]; //enter Boardname to display on CaptivePortal webpage
   private:
 #if defined  ESP8266
-  ESP8266WebServer server;
+    ESP8266WebServer server;
 #else
-  WebServer server;
+    WebServer server;
 #endif    
     WiFiClient client;
     DNSServer dnsServer;
-    HardwareSerial& CPSerial;
+    Stream& CPSerial;
     int switchPin;
     int ledPin;
-    bool hwSerial;
+    bool ENSerial;
     char baseMacChar[18];
     char rootHTLM[1000];
     char submitHTML[1000];
     void createHTML();
-    void hwSerialprintln(String str);
-    void hwSerialprint(String str);
+    void Serialprintln(String str);
+    void Serialprint(String str);
 };
 
 #endif
