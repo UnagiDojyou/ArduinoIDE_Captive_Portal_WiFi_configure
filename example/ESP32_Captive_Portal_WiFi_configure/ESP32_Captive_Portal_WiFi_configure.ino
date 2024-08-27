@@ -10,7 +10,7 @@ CPWiFiConfigure CPWiFi(BOOT_SW, LED_BUILTIN, Serial);
 void setup() {
   Serial.begin(115200);
   sprintf(CPWiFi.boardName, "ESP32");
-  if (LittleFS.begin(true)) {
+  if (!LittleFS.begin(true)) {
     Serial.println("Fail to start LittleFS");
   }
   if (!CPWiFi.begin()) {
