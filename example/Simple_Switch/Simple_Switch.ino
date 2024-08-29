@@ -26,6 +26,14 @@
 
 CPWiFiConfigure CPWiFi(BOOT_SW, LED_BUILTIN, Serial);
 
+void restart(){
+#if defined PICO_RP2040
+  rp2040.reboot();
+#else
+  ESP.restart();
+#endif
+}
+
 bool led = false;
 
 void handleOn() {
@@ -73,11 +81,11 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     if (count > 20) {
       Serial.println("WiFi connect Fail. reboot.");
-      ESP.restart();
+      restart();
     }
     delay(1000);  //1sencods
     if (CPWiFi.readButton()) {
-      ESP.restart();
+      restart();
     }
     Serial.print(".");
     if (!led) {
@@ -118,7 +126,7 @@ void loop() {
   Button_flag = digitalRead(BOOT_SW);
   if (!Button_flag && oldButton_flag) {
     if (CPWiFi.readButton()) {
-      ESP.restart();
+      restart();
     }
     led = !led;
   }
