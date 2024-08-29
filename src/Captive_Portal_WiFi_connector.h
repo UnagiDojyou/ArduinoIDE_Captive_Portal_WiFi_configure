@@ -35,7 +35,7 @@ class CPWiFiConfigure {
     int pressTime; //10ms
     int blinkTime; //ms
     char htmlTitle[100]; //enter CaptivePortal html title
-    char boardName[100]; //enter Boardname to display on CaptivePortal webpage
+    char boardName[25]; //enter Boardname to display on CaptivePortal webpage
   private:
 #if defined  ESP8266
     ESP8266WebServer server;
