@@ -3,7 +3,13 @@
 #include <Captive_Portal_WiFi_connector.h>
 #include <LittleFS.h>
 
-#define BOOT_SW 0
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+  #define BOOT_SW 9 //BOOT PIN of ESP32C3 is GPIO9
+#elif defined CONFIG_IDF_TARGET_ESP32C6
+  #define BOOT_SW 9 //BOOT PIN of ESP32C6 is GPIO9
+#else
+  #define BOOT_SW 0
+#endif
 
 CPWiFiConfigure CPWiFi(BOOT_SW, LED_BUILTIN, Serial);
 
