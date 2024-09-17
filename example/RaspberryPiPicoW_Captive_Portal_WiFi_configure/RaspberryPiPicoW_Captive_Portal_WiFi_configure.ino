@@ -11,16 +11,17 @@ CPWiFiConfigure CPWiFi(Button, LED_BUILTIN, Serial);
 void setup() {
   Serial.begin(115200);
   delay(1000);
-  sprintf(CPWiFi.boardName,"Raspberry Pi Pico W");
+  sprintf(CPWiFi.boardName,"PicoW");
+  sprintf(CPWiFi.htmlTitle, "Capitive_Portal_WiFi_configure sample code on Raspberry Pi Pico W");
   if(!CPWiFi.begin()){
     Serial.println("Fail to start Capitive_Portal_WiFi_configure");
-    return;
+    while (true) {}
   }
   WiFi.begin(CPWiFi.readSSID().c_str(), CPWiFi.readPASS().c_str());
   int count = 0;
   bool led = false;
   while (WiFi.status() != WL_CONNECTED) {
-    if (count > 20) {
+    if (count > 40) {
       Serial.println("WiFi connect Fail. reboot.");
       rp2040.reboot();
     }
@@ -51,4 +52,5 @@ void loop() {
   if (CPWiFi.readButton()) {
     rp2040.reboot();
   }
+  // write what you want to do using WiFi
 }

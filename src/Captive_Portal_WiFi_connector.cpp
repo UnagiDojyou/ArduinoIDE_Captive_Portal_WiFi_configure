@@ -10,30 +10,42 @@
 #include <DNSServer.h>
 #include "Captive_Portal_WiFi_connector.h"
 
-CPWiFiConfigure::CPWiFiConfigure(int _switchPin, int _ledPin)
+CPWiFiConfigure::CPWiFiConfigure(int _buttonPin, int _ledPin)
   : CPSerial(Serial), server(80), client(), dnsServer() {
   ENSerial = false;
-  softAP = true;
-  pressTime = 500;
-  blinkTime = 300;
-  switchPin = _switchPin;
-  ledPin = _ledPin;
-  baseMacChar[17] = { 0 };
-  sprintf(htmlTitle, "Captive Portal WiFi Connector");
-  sprintf(boardName, "board");
+  if (_ledPin < 0) {
+    ledPin = -_ledPin;
+    ledPullup = true;
+  } else {
+    ledPin = _ledPin;
+    ledPullup = false;
+  }
+  if (_buttonPin < 0) {
+    buttonPin = -_buttonPin;
+    buttonPulldown = true;
+  } else {
+    buttonPin = _buttonPin;
+    buttonPulldown = false;
+  }
 }
 
-CPWiFiConfigure::CPWiFiConfigure(int _switchPin, int _ledPin, Stream& port)
+CPWiFiConfigure::CPWiFiConfigure(int _buttonPin, int _ledPin, Stream& port)
   : CPSerial(port), server(80), client(), dnsServer() {
   ENSerial = true;
-  softAP = true;
-  pressTime = 500;
-  blinkTime = 300;
-  switchPin = _switchPin;
-  ledPin = _ledPin;
-  baseMacChar[17] = { 0 };
-  sprintf(htmlTitle, "Captive Portal WiFi Connector");
-  sprintf(boardName, "board");
+  if (_ledPin < 0) {
+    ledPin = -_ledPin;
+    ledPullup = true;
+  } else {
+    ledPin = _ledPin;
+    ledPullup = false;
+  }
+  if (_buttonPin < 0) {
+    buttonPin = -_buttonPin;
+    buttonPulldown = true;
+  } else {
+    buttonPin = _buttonPin;
+    buttonPulldown = false;
+  }
 }
 
 void CPWiFiConfigure::Serialprintln(String str){
@@ -50,8 +62,8 @@ void CPWiFiConfigure::Serialprint(String str){
 
 bool CPWiFiConfigure::begin() {
   pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, LOW);
-  pinMode(switchPin, INPUT_PULLUP);
+  digitalWrite(ledPin, ledPullup^LOW);
+  pinMode(buttonPin, INPUT_PULLUP);
   if (!LittleFS.begin()) {
     Serialprintln("[CPWiFiConfigure] SPIFFS failed, or not present");
     return false;
@@ -118,9 +130,9 @@ bool CPWiFiConfigure::begin() {
       if (count > blinkTime) {
         if (!ledStatus) {
           ledStatus = true;
-          digitalWrite(ledPin, HIGH);
+          digitalWrite(ledPin, ledPullup^HIGH);
         } else {
-          digitalWrite(ledPin, LOW);
+          digitalWrite(ledPin, ledPullup^LOW);
           ledStatus = false;
         }
         count = 0;
@@ -185,21 +197,21 @@ String CPWiFiConfigure::readPASS() {
 }
 
 bool CPWiFiConfigure::readButton() {
-  if (!digitalRead(switchPin)) {
+  if (buttonPulldown^!digitalRead(buttonPin)) {
     int count = 0;
-    digitalWrite(ledPin, LOW);
+    digitalWrite(ledPin, ledPullup^LOW);
     ledStatus = false;
-    while (!digitalRead(switchPin)) {
+    while (buttonPulldown^!digitalRead(buttonPin)) {
       delay(10);
       count++;
       if (count > pressTime) {
         ledStatus = true;
-        digitalWrite(ledPin, HIGH);
+        digitalWrite(ledPin, ledPullup^HIGH);
         Serialprintln("[CPWiFiConfigure] Erase wifi_config");
         LittleFS.begin();
         LittleFS.remove(wifi_config);
         LittleFS.end();
-        while (!digitalRead(switchPin)) {
+        while (buttonPulldown^!digitalRead(buttonPin)) {
           delay(10);
         }
         return true;

@@ -8,23 +8,24 @@
 
 #include <Captive_Portal_WiFi_connector.h>
 #include <LittleFS.h>
+
+#define BOOT_SW 0
+
 #if defined ESP8266
   #include <ESP8266WiFi.h>
   #include <ESP8266WebServer.h>
   #define LED_BUILTIN_ON LOW  //GPIO2 of ESP12 or ESP8266mod is pulluped
   #define LED_BUILTIN_OFF HIGH
+  CPWiFiConfigure CPWiFi(BOOT_SW, -LED_BUILTIN, Serial); //GPIO2 of ESP12 or ESP8266mod is pulluped
   ESP8266WebServer server(80);
 #else
   #include <WiFi.h>
   #include <WebServer.h>
   #define LED_BUILTIN_ON HIGH
   #define LED_BUILTIN_OFF LOW
+  CPWiFiConfigure CPWiFi(BOOT_SW, LED_BUILTIN, Serial);
   WebServer server(80);
 #endif
-
-#define BOOT_SW 0
-
-CPWiFiConfigure CPWiFi(BOOT_SW, LED_BUILTIN, Serial);
 
 void restart(){
 #if defined PICO_RP2040
@@ -67,6 +68,7 @@ void handleNotFound() {
 void setup() {
   Serial.begin(115200);
   sprintf(CPWiFi.boardName, "CPWiFiSampleSwitch");
+  sprintf(CPWiFi.htmlTitle, "Capitive_Portal_WiFi_configure sample code");
 #if defined ESP32
   if (!LittleFS.begin(true)) {
     Serial.println("Fail to start LittleFS");
@@ -74,12 +76,12 @@ void setup() {
 #endif
   if (!CPWiFi.begin()) {
     Serial.println("Fail to start Capitive_Portal_WiFi_configure");
-    return;
+    while (true) {}
   }
   WiFi.begin(CPWiFi.readSSID().c_str(), CPWiFi.readPASS().c_str());
   int count = 0;
   while (WiFi.status() != WL_CONNECTED) {
-    if (count > 20) {
+    if (count > 40) {
       Serial.println("WiFi connect Fail. reboot.");
       restart();
     }

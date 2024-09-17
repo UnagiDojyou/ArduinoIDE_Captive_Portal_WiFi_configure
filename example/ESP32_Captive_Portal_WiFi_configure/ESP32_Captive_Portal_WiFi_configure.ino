@@ -16,18 +16,19 @@ CPWiFiConfigure CPWiFi(BOOT_SW, LED_BUILTIN, Serial);
 void setup() {
   Serial.begin(115200);
   sprintf(CPWiFi.boardName, "ESP32");
+  sprintf(CPWiFi.htmlTitle, "Capitive_Portal_WiFi_configure sample code on ESP32");
   if (!LittleFS.begin(true)) {
     Serial.println("Fail to start LittleFS");
   }
   if (!CPWiFi.begin()) {
     Serial.println("Fail to start Capitive_Portal_WiFi_configure");
-    return;
+    while (true) {}
   }
   WiFi.begin(CPWiFi.readSSID().c_str(), CPWiFi.readPASS().c_str());
   int count = 0;
   bool led = false;
   while (WiFi.status() != WL_CONNECTED) {
-    if (count > 20) {
+    if (count > 40) {
       Serial.println("WiFi connect Fail. reboot.");
       ESP.restart();
     }

@@ -3,20 +3,21 @@
 
 #define BOOT_SW 0
 
-CPWiFiConfigure CPWiFi(BOOT_SW, LED_BUILTIN, Serial);
+CPWiFiConfigure CPWiFi(BOOT_SW, -LED_BUILTIN, Serial); //GPIO2 of ESP12 or ESP8266mod is pulluped
 
 void setup() {
   Serial.begin(115200);
   sprintf(CPWiFi.boardName, "ESP8266");
+  sprintf(CPWiFi.htmlTitle, "Capitive_Portal_WiFi_configure sample code on ESP8266");
   if (!CPWiFi.begin()) {
     Serial.println("Fail to start Capitive_Portal_WiFi_configure");
-    return;
+    while (true) {}
   }
   WiFi.begin(CPWiFi.readSSID().c_str(), CPWiFi.readPASS().c_str());
   int count = 0;
   bool led = false;
   while (WiFi.status() != WL_CONNECTED) {
-    if (count > 20) {
+    if (count > 40) {
       Serial.println("WiFi connect Fail. reboot.");
       ESP.restart();
     }
@@ -47,6 +48,5 @@ void loop() {
   if (CPWiFi.readButton()) {
     ESP.restart();
   }
-  digitalWrite(LED_BUILTIN, HIGH); //GPIO2 of ESP12 or ESP8266mod is pulluped
   // write what you want to do using WiFi
 }
