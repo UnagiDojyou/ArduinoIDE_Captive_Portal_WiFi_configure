@@ -24,7 +24,19 @@ void setup() {
     Serial.println("Fail to start Capitive_Portal_WiFi_configure");
     while (true) {}
   }
-  WiFi.begin(CPWiFi.readSSID().c_str(), CPWiFi.readPASS().c_str());
+  Serial.printf("settings: mode=%s hostname=%s ip=%s/%s gw=%s dns=%s\n",
+                CPWiFi.staIPMode.c_str(), CPWiFi.staHostname.c_str(),
+                CPWiFi.staIP.toString().c_str(), CPWiFi.staSubnet.toString().c_str(),
+                CPWiFi.staGateway.toString().c_str(), CPWiFi.staDNS.toString().c_str());
+  if (CPWiFi.staHostname.length() > 0) {
+    WiFi.setHostname(CPWiFi.staHostname.c_str());
+  }
+  if (CPWiFi.staIPMode == "static") {
+    //the library defaults staDNS to 8.8.8.8 when static IP is set without a DNS
+    WiFi.config(CPWiFi.staIP, CPWiFi.staGateway, CPWiFi.staSubnet, CPWiFi.staDNS);
+  }
+  WiFi.begin(CPWiFi.staSSID.c_str(), CPWiFi.staPassword.c_str());
+
   int count = 0;
   bool led = false;
   while (WiFi.status() != WL_CONNECTED) {
@@ -45,6 +57,9 @@ void setup() {
       led = false;
     }
     count++;
+  }
+  if (CPWiFi.staIPMode != "static" && CPWiFi.staDNS != IPAddress(0, 0, 0, 0)) {
+    WiFi.setDNS(CPWiFi.staDNS); //override DNS in DHCP mode
   }
   digitalWrite(LED_BUILTIN, LOW);
   led = false;

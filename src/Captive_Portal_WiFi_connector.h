@@ -29,9 +29,19 @@ class CPWiFiConfigure {
     bool softAP = true;
     bool ledStatus;
     bool begin();
+    //kept for backward compatibility; return the values loaded by begin()
     String readSSID();
     String readPASS();
     bool readButton();
+    //Settings loaded from the wifi_config file by begin()
+    String staSSID;
+    String staPassword;
+    String staHostname; //empty string if not set
+    String staIPMode;   //"dhcp" or "static", "dhcp" if not set
+    IPAddress staIP;       //IP address, 0.0.0.0 if dhcp or not set
+    IPAddress staSubnet;   //subnet mask, 0.0.0.0 if dhcp or not set
+    IPAddress staGateway;  //default gateway, 0.0.0.0 if dhcp or not set
+    IPAddress staDNS;      //DNS server, 0.0.0.0 if not set
     const char* wifi_config = "/WiFi.txt";
     IPAddress IP;
     int pressTime = 500; //10ms
@@ -51,8 +61,13 @@ class CPWiFiConfigure {
     uint8_t ledPin;
     bool ENSerial;
     char baseMacChar[18] = { 0 };
-    char rootHTLM[1000];
+    char softSSID[32] = { 0 }; //AP mode SSID (boardName-XXXXXX), also the default hostname
+    bool hasSubmitted = false; //true once a form submission was made; the pre-fill then uses the submitted values
+    //raw values of the last submission, used to pre-fill the form after an error
+    String formIP, formSubnet, formGateway, formDNS;
+    char rootHTLM[2048];
     char submitHTML[1000];
+    char formErrors[512] = { 0 }; //error text shown in red under the MAC address when the last submission had invalid values
     void createHTML();
     void Serialprintln(String str);
     void Serialprint(String str);

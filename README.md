@@ -14,10 +14,18 @@ You can add code under the two places (setup() and loop()) where "write what you
 2. Look for the SSID boardName-XXXXXX.<br>
 If it cannot be found, there is a high possibility that the FS settings are not configured correctly. Please reset or review the Arduino IDE settings.
 3. Connect to boardName-XXXXXX.
-4. Captive Portal will display the WiFi input fields for SSID and password.
+4. Captive Portal will display the input fields for SSID, password, hostname, IP mode, DNS, IP address, subnet mask and default gateway.
 5. Remember your MAC address. It will be used later to identify the IP address.
 6. Enter the SSID and password of the WiFi to which you want to connect board.
-7. Press "send" button.
+   Optional: enter a hostname. (The AP SSID is pre-filled by default.)
+   IP mode: select "DHCP/DNS only (auto)" for an IP address from the router, or "Manual (static IP)" to enter the IP address, subnet mask and default gateway.
+   Optional: enter a DNS server. If left empty in DHCP mode, the DNS from the router is used. If DHCP is selected and a DNS is entered, it overrides the DNS from the router. If static IP is selected and no DNS is entered, 8.8.8.8 is used.
+7. Press "Connect" button.
+   The entered values are validated: SSID (max 32 chars), password (max 63 chars), hostname (max 20 chars),
+   and in static IP mode the IP address, subnet mask and default gateway must be valid, the gateway must be in
+   the same subnet as the IP, and the IP must not be the subnet broadcast address. A DNS server is optional
+   (it defaults to 8.8.8.8 in static IP mode when left empty); if entered it must be a valid address. If any value is invalid, the form is re-shown pre-filled with the values you entered and the error messages are
+   listed in red below the MAC address.
 8. wait 30 second.
 9. Check LED status. If the slow blinking continues, please do "Reset WiFi Setting" and review your WiFi settings.
 
