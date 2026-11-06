@@ -11,7 +11,7 @@
   #define BOOT_SW 0
 #endif
 
-CPWiFiConfigure CPWiFi(BOOT_SW, LED_BUILTIN, Serial);
+CPWiFiConfigure CPWiFi(BOOT_SW, LED_BUILTIN, Serial, true);
 
 void setup() {
   Serial.begin(115200);

@@ -9,12 +9,21 @@ Start it as AP mode and use the Captive Portal to direct you to a page that asks
 ### Add code
 See example code.
 You can add code under the two places (setup() and loop()) where "write what you want to do using WiFi" is written in the comment.
+
+### Constructors
+* `CPWiFiConfigure(buttonPin, ledPin);` and `CPWiFiConfigure(buttonPin, ledPin, Serial);`<br>
+The DNS and default gateway fields are NOT shown in the form (for boards that only need the local network).
+In static IP mode the subnet mask is still entered, and no DNS server is set.
+* `CPWiFiConfigure(buttonPin, ledPin, true);` and `CPWiFiConfigure(buttonPin, ledPin, Serial, true);`<br>
+The DNS and default gateway fields are shown in the form (the example code uses this).
+
 ### How to set up WiFi.
 1. Open WiFi settings on any device.
 2. Look for the SSID boardName-XXXXXX.<br>
 If it cannot be found, there is a high possibility that the FS settings are not configured correctly. Please reset or review the Arduino IDE settings.
 3. Connect to boardName-XXXXXX.
 4. Captive Portal will display the input fields for SSID, password, hostname, IP mode, DNS, IP address, subnet mask and default gateway.
+   (When the constructor was called without `internet=true`, the DNS and default gateway fields are not displayed.)
 5. Remember your MAC address. It will be used later to identify the IP address.
 6. Enter the SSID and password of the WiFi to which you want to connect board.
    Optional: enter a hostname. (The AP SSID is pre-filled by default.)
@@ -23,7 +32,8 @@ If it cannot be found, there is a high possibility that the FS settings are not 
 7. Press "Connect" button.
    The entered values are validated: SSID (max 32 chars), password (max 63 chars), hostname (max 20 chars),
    and in static IP mode the IP address, subnet mask and default gateway must be valid, the gateway must be in
-   the same subnet as the IP, and the IP must not be the subnet broadcast address. A DNS server is optional
+   the same subnet as the IP, and the IP must not be the subnet broadcast address. (When the DNS and default gateway
+   fields are hidden, static IP mode only requires a valid IP address and subnet mask.) A DNS server is optional
    (it defaults to 8.8.8.8 in static IP mode when left empty); if entered it must be a valid address. If any value is invalid, the form is re-shown pre-filled with the values you entered and the error messages are
    listed in red below the MAC address.
 8. wait 30 second.

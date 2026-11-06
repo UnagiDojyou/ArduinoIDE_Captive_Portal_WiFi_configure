@@ -7,7 +7,7 @@
 
 #define BOOT_SW 12 //Pico W SW0 (BOOT) button is GPIO12
 
-CPWiFiConfigure CPWiFi(BOOT_SW, LED_BUILTIN, Serial);
+CPWiFiConfigure CPWiFi(BOOT_SW, LED_BUILTIN, Serial, true);
 
 void setup() {
   Serial.begin(115200);

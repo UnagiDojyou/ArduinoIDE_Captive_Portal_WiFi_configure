@@ -3,7 +3,7 @@
 
 #define BOOT_SW 0
 
-CPWiFiConfigure CPWiFi(BOOT_SW, -LED_BUILTIN, Serial); //GPIO2 of ESP12 or ESP8266mod is pulluped
+CPWiFiConfigure CPWiFi(BOOT_SW, -LED_BUILTIN, Serial, true); //GPIO2 of ESP12 or ESP8266mod is pulluped
 
 void setup() {
   Serial.begin(115200);

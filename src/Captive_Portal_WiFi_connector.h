@@ -19,10 +19,17 @@
 
 class CPWiFiConfigure {
   public:
-    //no Serial
+    //no Serial (internet=false: the DNS and default gateway fields are not shown)
     CPWiFiConfigure(int _buttonPin, int _ledPin);
-    //port=Serial
+    //port=Serial (internet=false: the DNS and default gateway fields are not shown)
     CPWiFiConfigure(int _buttonPin, int _ledPin, Stream& port);
+    //no Serial; internet=true shows the DNS and default gateway fields,
+    //internet=false hides them (local network use: the subnet mask field is still shown, no DNS is set)
+    CPWiFiConfigure(int _buttonPin, int _ledPin, bool _internet);
+    //port=Serial; internet=true shows the DNS and default gateway fields,
+    //internet=false hides them (local network use: the subnet mask field is still shown, no DNS is set)
+    CPWiFiConfigure(int _buttonPin, int _ledPin, Stream& port, bool _internet);
+    bool internet; //true: the form has DNS and default gateway fields; false: they are hidden
     
     bool ledPullup; //If led is pulluped, _ledPin is the GPIO number with the sign reversed ,or CPWiFi.ledPullup = true.
     bool buttonPulldown; //If is pulldowned, _buttonPin is the GPIO number with the sign reversed ,or CPWiFi.buttonPulldown = true.

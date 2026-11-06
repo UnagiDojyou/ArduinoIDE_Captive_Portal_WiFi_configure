@@ -14,7 +14,17 @@
 #include "Captive_Portal_WiFi_connector.h"
 
 CPWiFiConfigure::CPWiFiConfigure(int _buttonPin, int _ledPin)
-  : CPSerial(Serial), server(80), client(), dnsServer() {
+  : CPWiFiConfigure(_buttonPin, _ledPin, false) {
+  //no Serial, internet=false
+}
+
+CPWiFiConfigure::CPWiFiConfigure(int _buttonPin, int _ledPin, Stream& port)
+  : CPWiFiConfigure(_buttonPin, _ledPin, port, false) {
+  //port=Serial, internet=false
+}
+
+CPWiFiConfigure::CPWiFiConfigure(int _buttonPin, int _ledPin, bool _internet)
+  : internet(_internet), server(80), client(), dnsServer(), CPSerial(Serial) {
   ENSerial = false;
   if (_ledPin < 0) {
     ledPin = -_ledPin;
@@ -32,8 +42,8 @@ CPWiFiConfigure::CPWiFiConfigure(int _buttonPin, int _ledPin)
   }
 }
 
-CPWiFiConfigure::CPWiFiConfigure(int _buttonPin, int _ledPin, Stream& port)
-  : CPSerial(port), server(80), client(), dnsServer() {
+CPWiFiConfigure::CPWiFiConfigure(int _buttonPin, int _ledPin, Stream& port, bool _internet)
+  : internet(_internet), server(80), client(), dnsServer(), CPSerial(port) {
   ENSerial = true;
   if (_ledPin < 0) {
     ledPin = -_ledPin;
@@ -150,8 +160,8 @@ bool CPWiFiConfigure::begin() {
       staSubnet = IPAddress(0, 0, 0, 0);
       staGateway = IPAddress(0, 0, 0, 0);
     }
-    if (staIPMode == "static" && staDNS == IPAddress(0, 0, 0, 0)) {
-      staDNS = IPAddress(8, 8, 8, 8); //default DNS when static IP is set without DNS
+    if (internet && staIPMode == "static" && staDNS == IPAddress(0, 0, 0, 0)) {
+      staDNS = IPAddress(8, 8, 8, 8); //default DNS when static IP is set without DNS (internet mode only)
     }
     LittleFS.end();
     return true;
@@ -202,8 +212,13 @@ bool CPWiFiConfigure::begin() {
           staSubnet = "";
           staGateway = "";
         }
-        if (staIPMode == "static" && staDNS.length() == 0) {
-          staDNS = "8.8.8.8"; //default DNS when static IP is set without DNS
+        if (staIPMode == "static") {
+          if (!internet) {
+            staGateway = "";
+            staDNS = "";
+          } else if (staDNS.length() == 0) {
+            staDNS = "8.8.8.8"; //default DNS when static IP is set without DNS
+          }
         }
         // validate the submitted values and collect the problems
         const char* errors[8] = { 0 };
@@ -230,11 +245,13 @@ bool CPWiFiConfigure::begin() {
           if (!subnet.fromString(staSubnet.c_str()) || subnet == IPAddress(0, 0, 0, 0)) {
             appendError("Invalid subnet mask.");
           }
-          if (!gateway.fromString(staGateway.c_str()) || gateway == IPAddress(0, 0, 0, 0)) {
-            appendError("Invalid default gateway.");
+          if (internet) {
+            if (!gateway.fromString(staGateway.c_str()) || gateway == IPAddress(0, 0, 0, 0)) {
+              appendError("Invalid default gateway.");
+            }
           }
-          if (ip != IPAddress(0, 0, 0, 0) && subnet != IPAddress(0, 0, 0, 0) && gateway != IPAddress(0, 0, 0, 0)) {
-            if (!sameSubnet(ip, gateway, subnet)) {
+          if (ip != IPAddress(0, 0, 0, 0) && subnet != IPAddress(0, 0, 0, 0)) {
+            if (internet && gateway != IPAddress(0, 0, 0, 0) && !sameSubnet(ip, gateway, subnet)) {
               appendError("Default gateway is not in the same subnet as the IP address.");
             }
             if (isBroadcast(ip, subnet)) {
@@ -371,32 +388,59 @@ void CPWiFiConfigure::createHTML() {
   } else {
     errorLine[0] = '\0';
   }
-  snprintf(rootHTLM, 2048, "<!DOCTYPE html><html><head><title>%s</title>\
-<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head><body>\
-<h2>%s</h2>\
-<p>MACaddress<br>%s</p>\
-%s\
-<form action=\"/submit\" method=\"POST\">\
-SSID<br>\
-<input type=\"text\" name=\"SSID\" value=\"%s\" required><br>\
-Password<br>\
-<input type=\"text\" name=\"Password\" required><br>\
-Hostname<br>\
-<input type=\"text\" name=\"Hostname\" value=\"%s\" maxlength=\"20\"><br>\
-IP mode<br>\
-<input type=\"radio\" name=\"IPMode\" value=\"dhcp\"%s> DHCP/DNS only (auto)<br>\
-<input type=\"radio\" name=\"IPMode\" value=\"static\"%s> Manual (static IP)<br>\
-DNS<br>\
-<input type=\"text\" name=\"DNS\" value=\"%s\"><br>\
-IP address<br>\
-<input type=\"text\" name=\"IP\" value=\"%s\"><br>\
-Subnet mask<br>\
-<input type=\"text\" name=\"Subnet\" value=\"%s\"><br>\
-Default gateway<br>\
-<input type=\"text\" name=\"Gateway\" value=\"%s\"><br>\
-<input type=\"submit\" value=\"Connect\">\
-</form></body></html>",
-           htmlTitle, htmlTitle, baseMacChar, errorLine, vSSID, vHost, dhcpChecked, staticChecked, vDNS, vIP, vSub, vGW);
+  if (internet) {
+    //internet mode: the form has DNS and subnet mask fields
+    snprintf(rootHTLM, 2048, "<!DOCTYPE html><html><head><title>%s</title>\
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head><body>\
+  <h2>%s</h2>\
+  <p>MACaddress<br>%s</p>\
+  %s\
+  <form action=\"/submit\" method=\"POST\">\
+  SSID<br>\
+  <input type=\"text\" name=\"SSID\" value=\"%s\" required><br>\
+  Password<br>\
+  <input type=\"text\" name=\"Password\" required><br>\
+  Hostname<br>\
+  <input type=\"text\" name=\"Hostname\" value=\"%s\" maxlength=\"20\"><br>\
+  IP mode<br>\
+  <input type=\"radio\" name=\"IPMode\" value=\"dhcp\"%s> DHCP/DNS only (auto)<br>\
+  <input type=\"radio\" name=\"IPMode\" value=\"static\"%s> Manual (static IP)<br>\
+  DNS<br>\
+  <input type=\"text\" name=\"DNS\" value=\"%s\"><br>\
+  IP address<br>\
+  <input type=\"text\" name=\"IP\" value=\"%s\"><br>\
+  Subnet mask<br>\
+  <input type=\"text\" name=\"Subnet\" value=\"%s\"><br>\
+  Default gateway<br>\
+  <input type=\"text\" name=\"Gateway\" value=\"%s\"><br>\
+  <input type=\"submit\" value=\"Connect\">\
+  </form></body></html>",
+             htmlTitle, htmlTitle, baseMacChar, errorLine, vSSID, vHost, dhcpChecked, staticChecked, vDNS, vIP, vSub, vGW);
+  } else {
+    //local mode: the DNS and default gateway fields are hidden (the subnet mask field is still shown)
+    snprintf(rootHTLM, 2048, "<!DOCTYPE html><html><head><title>%s</title>\
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head><body>\
+  <h2>%s</h2>\
+  <p>MACaddress<br>%s</p>\
+  %s\
+  <form action=\"/submit\" method=\"POST\">\
+  SSID<br>\
+  <input type=\"text\" name=\"SSID\" value=\"%s\" required><br>\
+  Password<br>\
+  <input type=\"text\" name=\"Password\" required><br>\
+  Hostname<br>\
+  <input type=\"text\" name=\"Hostname\" value=\"%s\" maxlength=\"20\"><br>\
+  IP mode<br>\
+  <input type=\"radio\" name=\"IPMode\" value=\"dhcp\"%s> DHCP/DNS only (auto)<br>\
+  <input type=\"radio\" name=\"IPMode\" value=\"static\"%s> Manual (static IP)<br>\
+  IP address<br>\
+  <input type=\"text\" name=\"IP\" value=\"%s\"><br>\
+  Subnet mask<br>\
+  <input type=\"text\" name=\"Subnet\" value=\"%s\"><br>\
+  <input type=\"submit\" value=\"Connect\">\
+  </form></body></html>",
+             htmlTitle, htmlTitle, baseMacChar, errorLine, vSSID, vHost, dhcpChecked, staticChecked, vIP, vSub);
+  }
   snprintf(submitHTML, 1000, "<!DOCTYPE html><html><head><title>%s</title>\
 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head><body>\
 <h2>%s</h2>\
